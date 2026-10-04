@@ -45,14 +45,13 @@ fun ScheduleScreen(
     modifier: Modifier = Modifier,
     repo: AnimeRepository = remember { AnimeRepository() },
 ) {
-    var days by remember { mutableStateOf<List<ScheduleDay>>(emptyList()) }
-    var loading by remember { mutableStateOf(true) }
+    var days by remember { mutableStateOf<List<ScheduleDay>>(DemoData.schedule) }
+    var loading by remember { mutableStateOf(false) }
     var selectedDay by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        days = runCatching { repo.schedule() }.getOrElse { DemoData.schedule }
-        if (days.isEmpty()) days = DemoData.schedule
-        loading = false
+        val live = runCatching { repo.schedule() }.getOrDefault(emptyList())
+        if (live.isNotEmpty()) days = live
     }
 
     LazyColumn(

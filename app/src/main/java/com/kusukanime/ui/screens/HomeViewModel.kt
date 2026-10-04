@@ -20,31 +20,28 @@ data class HomeUiState(
 )
 
 class HomeViewModel(private val repo: AnimeRepository = AnimeRepository()) : ViewModel() {
-    private val _state = MutableStateFlow(HomeUiState())
+    // Start with the bundled catalog so the UI is never empty, then try the
+    // live API in the background and swap in real data if it answers.
+    private val _state = MutableStateFlow(
+        HomeUiState(loading = false, offlineDemo = true, feed = DemoData.feed, latest = DemoData.latest)
+    )
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
 
     init { load() }
 
     fun load() {
         viewModelScope.launch {
-            _state.value = HomeUiState(loading = true)
-            val feed = runCatching { repo.feed() }
-            val latest = runCatching { repo.latestAnime() }
-            if (feed.isSuccess || latest.isSuccess) {
+            val feed = runCatching { repo.feed() }.getOrDefault(emptyList())
+            val latest = runCatching { repo.latestAnime() }.getOrDefault(emptyList())
+            if (feed.isNotEmpty() || latest.isNotEmpty()) {
                 _state.value = HomeUiState(
                     loading = false,
-                    feed = feed.getOrDefault(emptyList()),
-                    latest = latest.getOrDefault(emptyList()),
-                )
-            } else {
-                // Backend unreachable (project was dormant): keep the UI reviewable.
-                _state.value = HomeUiState(
-                    loading = false,
-                    offlineDemo = true,
-                    feed = DemoData.feed,
-                    latest = DemoData.latest,
+                    offlineDemo = false,
+                    feed = feed,
+                    latest = latest,
                 )
             }
+            // Otherwise keep the demo catalog already on screen.
         }
     }
 }

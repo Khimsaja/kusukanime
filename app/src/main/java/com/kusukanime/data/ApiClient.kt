@@ -34,8 +34,9 @@ object ApiClient {
 
     private fun build(): KusuApi {
         val client = OkHttpClient.Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(8, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
             .build()
         return Retrofit.Builder()
             .baseUrl(baseUrl)

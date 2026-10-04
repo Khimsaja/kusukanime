@@ -1,0 +1,70 @@
+package io.ktor.client.plugins;
+
+import io.ktor.http.auth.HttpAuthHeader;
+import io.ktor.utils.io.KtorDsl;
+import java.nio.charset.Charset;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import kotlin.Metadata;
+import kotlin.jvm.internal.l;
+import z5.C2496a;
+
+@KtorDsl
+@Metadata(d1 = {"\u00004\n\u0002\u0018\u0002\n\u0002\u0010\u0000\n\u0002\b\u0002\n\u0002\u0018\u0002\n\u0002\u0018\u0002\n\u0000\n\u0002\u0010\u0007\n\u0000\n\u0002\u0018\u0002\n\u0002\b\u0002\n\u0002\u0010#\n\u0002\b\u0004\n\u0002\u0010%\n\u0002\b\u000e\b\u0007\u0018\u00002\u00020\u0001B\u0007¢\u0006\u0004\b\u0002\u0010\u0003J%\u0010\n\u001a\u00020\t2\n\u0010\u0006\u001a\u00060\u0004j\u0002`\u00052\n\b\u0002\u0010\b\u001a\u0004\u0018\u00010\u0007¢\u0006\u0004\b\n\u0010\u000bR$\u0010\r\u001a\f\u0012\b\u0012\u00060\u0004j\u0002`\u00050\f8\u0000X\u0080\u0004¢\u0006\f\n\u0004\b\r\u0010\u000e\u001a\u0004\b\u000f\u0010\u0010R*\u0010\u0012\u001a\u0012\u0012\b\u0012\u00060\u0004j\u0002`\u0005\u0012\u0004\u0012\u00020\u00070\u00118\u0000X\u0080\u0004¢\u0006\f\n\u0004\b\u0012\u0010\u0013\u001a\u0004\b\u0014\u0010\u0015R*\u0010\u0016\u001a\n\u0018\u00010\u0004j\u0004\u0018\u0001`\u00058\u0006@\u0006X\u0086\u000e¢\u0006\u0012\n\u0004\b\u0016\u0010\u0017\u001a\u0004\b\u0018\u0010\u0019\"\u0004\b\u001a\u0010\u001bR&\u0010\u001c\u001a\u00060\u0004j\u0002`\u00058\u0006@\u0006X\u0086\u000e¢\u0006\u0012\n\u0004\b\u001c\u0010\u0017\u001a\u0004\b\u001d\u0010\u0019\"\u0004\b\u001e\u0010\u001b¨\u0006\u001f"}, d2 = {"Lio/ktor/client/plugins/HttpPlainTextConfig;", "", "<init>", "()V", "Ljava/nio/charset/Charset;", "Lio/ktor/utils/io/charsets/Charset;", HttpAuthHeader.Parameters.Charset, "", "quality", "LO3/C;", "register", "(Ljava/nio/charset/Charset;Ljava/lang/Float;)V", "", "charsets", "Ljava/util/Set;", "getCharsets$ktor_client_core", "()Ljava/util/Set;", "", "charsetQuality", "Ljava/util/Map;", "getCharsetQuality$ktor_client_core", "()Ljava/util/Map;", "sendCharset", "Ljava/nio/charset/Charset;", "getSendCharset", "()Ljava/nio/charset/Charset;", "setSendCharset", "(Ljava/nio/charset/Charset;)V", "responseCharsetFallback", "getResponseCharsetFallback", "setResponseCharsetFallback", "ktor-client-core"}, k = 1, mv = {2, 1, 0}, xi = 48)
+/* loaded from: classes.dex */
+public final class HttpPlainTextConfig {
+    private Charset sendCharset;
+    private final Set<Charset> charsets = new LinkedHashSet();
+    private final Map<Charset, Float> charsetQuality = new LinkedHashMap();
+    private Charset responseCharsetFallback = C2496a.f19036b;
+
+    public static /* synthetic */ void register$default(HttpPlainTextConfig httpPlainTextConfig, Charset charset, Float f5, int i7, Object obj) {
+        if ((i7 & 2) != 0) {
+            f5 = null;
+        }
+        httpPlainTextConfig.register(charset, f5);
+    }
+
+    public final Map<Charset, Float> getCharsetQuality$ktor_client_core() {
+        return this.charsetQuality;
+    }
+
+    public final Set<Charset> getCharsets$ktor_client_core() {
+        return this.charsets;
+    }
+
+    public final Charset getResponseCharsetFallback() {
+        return this.responseCharsetFallback;
+    }
+
+    public final Charset getSendCharset() {
+        return this.sendCharset;
+    }
+
+    public final void register(Charset charset, Float quality) {
+        l.f(HttpAuthHeader.Parameters.Charset, charset);
+        if (quality != null) {
+            double dFloatValue = quality.floatValue();
+            if (0.0d > dFloatValue || dFloatValue > 1.0d) {
+                throw new IllegalStateException("Check failed.");
+            }
+        }
+        this.charsets.add(charset);
+        if (quality == null) {
+            this.charsetQuality.remove(charset);
+        } else {
+            this.charsetQuality.put(charset, quality);
+        }
+    }
+
+    public final void setResponseCharsetFallback(Charset charset) {
+        l.f("<set-?>", charset);
+        this.responseCharsetFallback = charset;
+    }
+
+    public final void setSendCharset(Charset charset) {
+        this.sendCharset = charset;
+    }
+}

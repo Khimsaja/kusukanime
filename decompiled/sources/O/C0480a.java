@@ -1,0 +1,35 @@
+package O;
+
+import android.os.Looper;
+import e4.InterfaceC0821a;
+
+/* renamed from: O.a, reason: case insensitive filesystem */
+/* loaded from: classes.dex */
+public final class C0480a extends kotlin.jvm.internal.m implements InterfaceC0821a {
+
+    /* renamed from: m, reason: collision with root package name */
+    public static final C0480a f7053m = new C0480a(0, 0);
+
+    /* renamed from: n, reason: collision with root package name */
+    public static final C0480a f7054n = new C0480a(0, 1);
+
+    /* renamed from: l, reason: collision with root package name */
+    public final /* synthetic */ int f7055l;
+
+    /* JADX WARN: 'super' call moved to the top of the method (can break code semantics) */
+    public /* synthetic */ C0480a(int i7, int i8) {
+        super(i7);
+        this.f7055l = i8;
+    }
+
+    @Override // e4.InterfaceC0821a
+    public final Object invoke() {
+        switch (this.f7055l) {
+            case 0:
+                return Looper.getMainLooper() != null ? C.f6956k : z0.f7248k;
+            default:
+                C0486d.x("Unexpected call to default provider");
+                throw null;
+        }
+    }
+}

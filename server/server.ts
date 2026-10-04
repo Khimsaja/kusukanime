@@ -271,6 +271,20 @@ async function animeDetail(slug: string) {
   const altTitles = [m.title?.english, m.title?.native, ...(m.synonyms ?? [])]
     .filter((t): t is string => !!t && t !== mediaTitle(m));
 
+  // The original client reads detail-level streams for the featured (latest)
+  // episode, so mirror the latest episode's stream here too.
+  const latestStreamEp = streamEps[streamEps.length - 1];
+  const detailStreams = latestStreamEp
+    ? [{
+        url: latestStreamEp.url ? latestStreamEp.url.replace(/^http:\/\//, "https://") : null,
+        server: latestStreamEp.site ?? "Official",
+        resolution: null,
+        headers: {},
+        is_embed: true,
+        is_raw: false,
+      }]
+    : [];
+
   return {
     title: mediaTitle(m),
     cover: m.coverImage?.extraLarge ?? m.coverImage?.large ?? null,
@@ -280,7 +294,7 @@ async function animeDetail(slug: string) {
     info,
     episode: latestEpisodeN(m)?.toString() ?? null,
     episodes,
-    streams: [],
+    streams: detailStreams,
     redirected_from: null,
   };
 }
@@ -326,11 +340,47 @@ let genreNames: string[] = [];
 async function genres() {
   const data = await anilist<{ GenreCollection: string[] }>(GENRES_QUERY, {}, TTL.genres);
   genreNames = data.GenreCollection;
+  void warmGenreCounts();
   return data.GenreCollection.map((name) => ({
     name,
     slug: slugify(name),
-    count: 0,
+    count: genreCounts.get(name) ?? 0,
   }));
+}
+
+const genreCounts = new Map<string, number>();
+let genreCountsWarming = false;
+
+const GENRE_COUNT_QUERY = `
+  query ($genre: String) {
+    Page(page: 1, perPage: 1) {
+      pageInfo { total }
+      media(type: ANIME, genre: $genre, isAdult: false) { id }
+    }
+  }
+`;
+
+/** Fill per-genre title counts in the background (cached for 24h). */
+async function warmGenreCounts() {
+  if (genreCountsWarming || genreCounts.size) return;
+  genreCountsWarming = true;
+  try {
+    for (const name of genreNames) {
+      try {
+        const data = await anilist<{ Page: { pageInfo: { total: number } } }>(
+          GENRE_COUNT_QUERY,
+          { genre: name },
+          TTL.genres,
+        );
+        genreCounts.set(name, data.Page.pageInfo.total ?? 0);
+      } catch {
+        // Leave 0 on failure; the next genres() call retries the warm-up.
+      }
+      await new Promise((r) => setTimeout(r, 350));
+    }
+  } finally {
+    genreCountsWarming = false;
+  }
 }
 
 async function genreDetail(genreSlug: string, page: number) {
@@ -419,16 +469,23 @@ async function schedule() {
 }
 
 async function azIndex() {
-  const data = await anilist<PageData>(
-    PAGE_QUERY,
-    { page: 1, perPage: 50, sort: ["TITLE_ROMAJI"] },
-    TTL.detail,
-  );
-  return data.Page.media.map((m) => ({
-    slug: mediaSlug(m),
-    title: mediaTitle(m),
-    cover: m.coverImage?.extraLarge ?? m.coverImage?.large ?? null,
-    meta: m.seasonYear ? String(m.seasonYear) : null,
+  // The original backend exposed the full A–Z catalog index; page through
+  // AniList's alphabetical listing instead of returning a single page.
+  const items: ReturnType<typeof toAnimeItem>[] = [];
+  for (let page = 1; page <= 8; page++) {
+    const data = await anilist<PageData>(
+      PAGE_QUERY,
+      { page, perPage: 50, sort: ["TITLE_ROMAJI"] },
+      TTL.detail,
+    );
+    items.push(...data.Page.media.map(toAnimeItem));
+    if (data.Page.media.length < 50) break;
+  }
+  return items.map((m) => ({
+    slug: m.slug,
+    title: m.title,
+    cover: m.cover,
+    meta: m.meta,
   }));
 }
 

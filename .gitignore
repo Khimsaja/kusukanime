@@ -1,4 +1,5 @@
 *.apk
+.sdk-cache/
 .gradle/
 build/
 local.properties
